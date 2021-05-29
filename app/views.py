@@ -7,7 +7,7 @@ def index(request):
 
 
 def report(request):
-    return HttpResponse("YO YO")
+    return HttpResponse("REPORT PAGE FOR ADMINS")
 
 
 def code_handler(request, code):
