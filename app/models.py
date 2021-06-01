@@ -1,4 +1,6 @@
 from django.db import models
+from django.db.models.signals import pre_save
+from django.dispatch import receiver
 
 
 class Urldata(models.Model):
@@ -7,6 +9,14 @@ class Urldata(models.Model):
     shortcode = models.CharField( max_length= 20, unique=True)
     added = models.DateTimeField(auto_now_add=True)
     lastupdate = models.DateTimeField(auto_now=True)
+
+    def __str__(self) -> str:
+        return "{} .   | {}   |   {}".format(self.id, self.url , self.shortcode )
+    
+    def save(self, *args, **kwargs):
+        super(Urldata, self).save(*args, **kwargs)
+
+
 
 
 class Accessdata(models.Model):
@@ -18,3 +28,14 @@ class Accessdata(models.Model):
 
 
 
+@receiver(pre_save, sender=Urldata)
+def update_short_url(sender, instance, *args, **kwargs):
+    shortcode_extra=""
+    i=1
+    while True:
+        if sender.objects.filter(shortcode=instance.shortcode+shortcode_extra):
+            i+=1
+            shortcode_extra = str(i)
+        else:
+            break
+    instance.shortcode += shortcode_extra
