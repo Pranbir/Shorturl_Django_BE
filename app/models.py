@@ -20,12 +20,23 @@ class Urldata(models.Model):
 
 
 class Accessdata(models.Model):
-    shortcode = models.ForeignKey(Urldata, on_delete=models.CASCADE)
+    shorturlid = models.ForeignKey(Urldata, on_delete=models.CASCADE)
     referer = models.CharField(blank=True, default="", max_length=200)
     useragent = models.CharField(max_length=200, default="", blank=True)
     ip = models.CharField(max_length=200, default="", blank=True)
-    location = models.CharField(max_length=50 , blank=True, default="")
+    locationcountry = models.CharField(max_length=50 , blank=True, default="N/A")
+    locationregion = models.CharField(max_length=50 , blank=True, default="N/A")
+    locationcity = models.CharField(max_length=50 , blank=True, default="N/A")
+    devicetype = models.CharField(max_length=20 ,blank=True, default = "N/A")
+    os = models.CharField(max_length=20 ,blank=True, default = "N/A")
+    touchsupport = models.CharField(max_length=20 ,blank=True, default = "N/A")
+    browser = models.CharField(max_length=20 ,blank=True, default = "N/A")
+    devicefamily = models.CharField(max_length=20 ,blank=True, default = "N/A")
+    lat = models.FloatField(blank=True, default = None, null=True)
+    lon = models.FloatField(blank=True, default = None, null=True)
 
+    def __str__(self) -> str:
+        return "{} ==>>> {}".format(self.ip, self.shorturlid)
 
 
 @receiver(pre_save, sender=Urldata)

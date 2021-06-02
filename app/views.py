@@ -1,10 +1,11 @@
 from django.http.response import HttpResponse
-from django.shortcuts import render
-from .utility import error_handler, success_response, custom_response
+from django.shortcuts import redirect, render
+from .utility import error_handler, success_response, custom_response, get_client_ip
 import shortuuid
 import json
 from .models import Accessdata, Urldata
 from django.views.decorators.csrf import csrf_exempt
+import requests
 
 
 limit = 5
@@ -28,8 +29,45 @@ def code_handler(request, code):
             url_object = Urldata.objects.filter(shortcode = code).first()
             if not url_object:
                 return custom_response(request, "Invalid Short URL", status_code=404) 
-            print(request.headers)
-            return success_response(request,"Data fetched", data=dict(url=url_object.url))
+            useragent = request.META['HTTP_USER_AGENT']
+            ip = get_client_ip(request)
+            shorturlid = url_object
+            referer = request.headers.get("Referer", "N/A")
+            useragent = request.META.get('HTTP_USER_AGENT', "N/A")
+            ip = get_client_ip(request) if get_client_ip(request) else "N/A"
+            devicetype = "Mobile" if request.user_agent.is_mobile else "Tablet" if request.user_agent.is_tablet else "PC" if request.user_agent.is_pc else "BOT" if request.user_agent.is_bot else "N/A"
+            os = "{} {}".format(request.user_agent.os.family , request.user_agent.os.version_string)
+            touchsupport = str(request.user_agent.is_touch_capable)
+            browser = "{} {}".format(request.user_agent.browser.family, request.user_agent.browser.version_string)
+            devicefamily = request.user_agent.device.family
+            locationcountry = locationregion = locationcity = "N/A"
+            lat = lon = None
+            geo_data = requests.get(url="http://ip-api.com/json/{}".format(ip)).json() if get_client_ip(request) else None
+            if geo_data and geo_data.get("status") and geo_data.get("status") == "success":
+                locationcountry = geo_data.get("country", "N/A")
+                locationregion = geo_data.get("regionName", "N/A")
+                locationcity = geo_data.get("country", "N/A")
+                lat = geo_data.get("lat")
+                lon = geo_data.get("lon")
+            
+            newAccessData = Accessdata(shorturlid = shorturlid,
+                                        referer = referer,
+                                        useragent = useragent,
+                                        ip = ip,
+                                        locationcountry = locationcountry,
+                                        locationregion = locationregion,
+                                        locationcity = locationcity,
+                                        devicetype = devicetype,
+                                        os = os,
+                                        touchsupport = touchsupport,
+                                        browser = browser,
+                                        devicefamily = devicefamily,
+                                        lat = lat,
+                                        lon = lon
+                                    )
+            newAccessData.save()
+            return redirect(url_object.url)
+            #return success_response(request,"Data fetched", data=dict(url=url_object.url))
 
     else:
         raise Exception("Method Not Allowed")
