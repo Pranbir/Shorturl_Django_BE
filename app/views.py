@@ -1,11 +1,12 @@
 from django.http.response import HttpResponse
 from django.shortcuts import redirect, render
-from .utility import error_handler, success_response, custom_response, get_client_ip
 import shortuuid
 import json
 from .models import Accessdata, Urldata
 from django.views.decorators.csrf import csrf_exempt
 import requests
+from .utility import error_handler, success_response, custom_response, get_client_ip
+from django.db.models import Q
 
 
 limit = 5
@@ -18,6 +19,11 @@ def index(request):
 @error_handler
 def report(request):
     return HttpResponse("REPORT PAGE FOR ADMINS")
+
+
+@error_handler
+def report_code(request,code):
+    return HttpResponse("REPORT PAGE FOR THE CODE : {}".format(code))
 
 
 @error_handler
@@ -68,7 +74,6 @@ def code_handler(request, code):
             newAccessData.save()
             return redirect(url_object.url)
             #return success_response(request,"Data fetched", data=dict(url=url_object.url))
-
     else:
         raise Exception("Method Not Allowed")
 
@@ -87,5 +92,19 @@ def code_generator(request):
             return success_response(request, "Successfully Created", data=dict(url="{}/{}".format(request.get_host(),data.shortcode)))
         else:
             raise Exception("Unable to create a shortcode")
+    else:
+        raise Exception("Method Not Allowed")
+
+
+#@error_handler
+def search_code(request):
+    if request.method == "GET":
+        q = request.GET.get('q', None)
+        print(q)
+        if q:
+            search_obj = Urldata.objects.filter(Q(shortcode__contains=q)|Q(url__contains=q)).order_by('-lastupdate')[:10].values()
+            return success_response(request, "Successfully Fetched Data", data=list(search_obj))
+        else:
+            return custom_response(request,"Please provide the search query", status_code=404)
     else:
         raise Exception("Method Not Allowed")
