@@ -16,8 +16,9 @@ def index(request):
     return success_response(request, "API IS WORKING")
 
 
-@error_handler
+#@error_handler
 def report(request):
+    return render(request, 'dashboard.html', context={})
     return HttpResponse("REPORT PAGE FOR ADMINS")
 
 
