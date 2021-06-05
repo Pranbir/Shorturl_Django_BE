@@ -7,6 +7,8 @@ from django.views.decorators.csrf import csrf_exempt
 import requests
 from .utility import error_handler, success_response, custom_response, get_client_ip
 from django.db.models import Q
+from django.contrib.auth import authenticate, login, logout
+from django.urls import reverse
 
 
 limit = 5
@@ -19,7 +21,29 @@ def index(request):
 #@error_handler
 def report(request):
     return render(request, 'dashboard.html', context={})
-    return HttpResponse("REPORT PAGE FOR ADMINS")
+
+
+@error_handler
+def login_page(request):
+    return render(request, 'login.html', context={})
+
+
+@error_handler
+def logout_view(request):
+    logout(request)
+    return redirect(reverse('login_page'))
+
+
+@error_handler
+def login_handler(request):
+    username = request.POST.get('username')
+    password = request.POST.get('password')
+    user = authenticate(request, username=username, password=password)
+    if user is not None:
+        login(request, user)
+        return redirect(reverse('report'))
+    else:
+        return redirect(reverse('login_page'))
 
 
 @error_handler
