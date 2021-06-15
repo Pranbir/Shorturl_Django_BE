@@ -1,0 +1,32 @@
+{% load static%}
+
+<!DOCTYPE html>
+<html lang="en">
+  {% include 'header.html' %}
+
+  <body id="page-top">
+    <!-- Page Wrapper -->
+    <div id="wrapper">
+      <!-- Sidebar -->
+
+      <!-- Content Wrapper -->
+      <div id="content-wrapper" class="d-flex flex-column">
+        {% include 'navbar.html' %}
+
+        <!-- Begin Page Content -->
+        <div class="container-fluid">
+            {% block body %}{% endblock body %}
+        </div>
+
+        {% include 'footer.html' %} 
+        {% include 'others.html' %}
+      </div>
+      <!-- End of Content Wrapper -->
+    </div>
+    <!-- End of Page Wrapper -->
+    {% include 'common_js.html' %} 
+    <!-- Other scripts -->
+    {% block page_js %}{% endblock page_js %}
+     <!-- End of other scripts -->
+  </body>
+</html>

@@ -9,9 +9,11 @@ from .utility import error_handler, success_response, custom_response, get_clien
 from django.db.models import Q
 from django.contrib.auth import authenticate, login, logout
 from django.urls import reverse
+from django.contrib.auth.decorators import login_required
 
 
 limit = 5
+
 
 @error_handler
 def index(request):
@@ -19,8 +21,16 @@ def index(request):
 
 
 #@error_handler
+@login_required(login_url='/login')
 def report(request):
     return render(request, 'dashboard.html', context={})
+
+
+@error_handler
+def report_code(request,code):
+    print(code)
+    return render(request, 'url_report.html', {"code":code})
+    return HttpResponse("REPORT PAGE FOR THE CODE : {}".format(code))
 
 
 @error_handler
@@ -46,12 +56,7 @@ def login_handler(request):
         return redirect(reverse('login_page'))
 
 
-@error_handler
-def report_code(request,code):
-    return HttpResponse("REPORT PAGE FOR THE CODE : {}".format(code))
-
-
-@error_handler
+#@error_handler
 def code_handler(request, code):
     if request.method == "GET":
         if not code:
@@ -97,24 +102,29 @@ def code_handler(request, code):
                                         lon = lon
                                     )
             newAccessData.save()
+            print(url_object.url)
             return redirect(url_object.url)
             #return success_response(request,"Data fetched", data=dict(url=url_object.url))
     else:
         raise Exception("Method Not Allowed")
 
 
-@error_handler
 @csrf_exempt
+@error_handler
 def code_generator(request):
     if request.method == "POST":
         body_unicode = request.body.decode('utf-8')
         body = json.loads(body_unicode)
         url = body['url']
+        if url.startswith('http://') or url.startswith('https://'):
+            pass
+        else:
+            url = "http://" + url
         shortcode = shortuuid.uuid()[:limit]
         data = Urldata(url=url, shortcode=shortcode)
         data.save()
         if data.shortcode:
-            return success_response(request, "Successfully Created", data=dict(url="{}/{}".format(request.get_host(),data.shortcode)))
+            return success_response(request, "Successfully Created", data=dict(shortcode=data.shortcode,url="{}://{}/{}".format(request.scheme,request.get_host(),data.shortcode)))
         else:
             raise Exception("Unable to create a shortcode")
     else:

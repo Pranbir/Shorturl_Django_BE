@@ -18,7 +18,6 @@ class Urldata(models.Model):
 
 
 
-
 class Accessdata(models.Model):
     shorturlid = models.ForeignKey(Urldata, on_delete=models.CASCADE)
     referer = models.CharField(blank=True, default="", max_length=200)
